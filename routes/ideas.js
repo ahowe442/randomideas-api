@@ -79,7 +79,7 @@ router.put('/:id', (req, res) => {
   }
   //update or keep the body & tag.
   idea.text = req.body.text || idea.text;
-  idea.text = req.body.tag || idea.tag;
+  idea.tag = req.body.tag || idea.tag;
 
   res.json({ success: true, data: idea });
 });
