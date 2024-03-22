@@ -18,7 +18,7 @@ const ideas = [
   },
   {
     id: 3,
-    text: 'Basketball Bracket App - Helps you create a NCAA bracket',
+    text: 'Basketball Bracket App - Helps you create a NCAA bracket. Oriented for the casual user.',
     tag: 'technology',
     username: 'TonyStark',
     date: '2024-21-03',
@@ -42,17 +42,20 @@ router.get('/:id', (req, res) => {
   const idea = ideas.find(
     (idea) => idea.id === +req.params.id
   );
+  // If not found return a 404 error message
   if (!idea) {
     res.status(404).json({
       success: false,
       error: 'Resource not found',
     });
   }
+  // Share success message and return the idea
   res.json({ success: true, data: idea });
 });
 
 // Add an idea
 router.post('/', (req, res) => {
+  //Create the idea object
   const idea = {
     id: ideas.length + 1,
     text: req.body.text,
@@ -60,9 +63,10 @@ router.post('/', (req, res) => {
     username: req.body.username,
     date: new Date().toISOString().slice(0, 10),
   };
-  //adds idea to the array
+  //adds idea object to the array
   ideas.push(idea);
 
+  // returns success message and the new idea
   res.json({ success: true, data: idea });
 });
 
@@ -103,6 +107,31 @@ router.delete('/:id', (req, res) => {
 
   // Share success message and return an empty object
   res.json({ success: true, data: {} });
+});
+
+// Find ideas by text
+router.get('/search/:searchText', (req, res) => {
+  const searchText = req.params.searchText.toLowerCase();
+
+  // Filter ideas based on the searchText
+  const filteredIdeas = ideas.filter(
+    (idea) =>
+      idea.text.toLowerCase().includes(searchText) ||
+      idea.tag.toLowerCase().includes(searchText) ||
+      idea.username.toLowerCase().includes(searchText) ||
+      idea.date.toLowerCase().includes(searchText)
+  );
+
+  // If no ideas match the search criteria, send a 404 error
+  if (filteredIdeas.length === 0) {
+    return res.status(404).json({
+      success: false,
+      error: 'No ideas found matching the search criteria',
+    });
+  }
+
+  // If ideas are found, return them
+  res.json({ success: true, data: filteredIdeas });
 });
 
 module.exports = router;
