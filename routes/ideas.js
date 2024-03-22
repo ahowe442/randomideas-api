@@ -32,7 +32,43 @@ const ideas = [
   },
 ];
 
-//Get all ideas
+// Middleware to convert text to lowercase
+const toLowerCase = (text) => text.toLowerCase();
+
+// Middleware to handle error response for resource not found
+const handleResourceNotFound = (res) =>
+  res.status(404).json({
+    success: false,
+    error: 'Resource not found',
+  });
+
+// Middleware to filter ideas based on a search criteria
+const filterIdeas = (ideas, searchText) =>
+  ideas.filter(
+    (idea) =>
+      toLowerCase(idea.text).includes(searchText) ||
+      toLowerCase(idea.tag).includes(searchText) ||
+      toLowerCase(idea.username).includes(searchText)
+  );
+
+// Middleware to filter ideas based on date or date range
+const filterIdeasByDate = (ideas, startDate, endDate) => {
+  const startDateObj = new Date(startDate);
+  const endDateObj = endDate ? new Date(endDate) : null;
+
+  return ideas.filter((idea) => {
+    const ideaDate = new Date(idea.date);
+    if (endDateObj) {
+      return (
+        ideaDate >= startDateObj && ideaDate <= endDateObj
+      );
+    } else {
+      return ideaDate.getTime() === startDateObj.getTime();
+    }
+  });
+};
+
+// Get all ideas
 router.get('/', (req, res) => {
   res.json({ success: true, data: ideas });
 });
@@ -42,20 +78,14 @@ router.get('/:id', (req, res) => {
   const idea = ideas.find(
     (idea) => idea.id === +req.params.id
   );
-  // If not found return a 404 error message
   if (!idea) {
-    res.status(404).json({
-      success: false,
-      error: 'Resource not found',
-    });
+    return handleResourceNotFound(res);
   }
-  // Share success message and return the idea
   res.json({ success: true, data: idea });
 });
 
 // Add an idea
 router.post('/', (req, res) => {
-  //Create the idea object
   const idea = {
     id: ideas.length + 1,
     text: req.body.text,
@@ -63,10 +93,7 @@ router.post('/', (req, res) => {
     username: req.body.username,
     date: new Date().toISOString().slice(0, 10),
   };
-  //adds idea object to the array
   ideas.push(idea);
-
-  // returns success message and the new idea
   res.json({ success: true, data: idea });
 });
 
@@ -76,90 +103,49 @@ router.put('/:id', (req, res) => {
     (idea) => idea.id === +req.params.id
   );
   if (!idea) {
-    res.status(404).json({
-      success: false,
-      error: 'Resource not found',
-    });
+    return handleResourceNotFound(res);
   }
-  //update or keep the body & tag.
   idea.text = req.body.text || idea.text;
   idea.tag = req.body.tag || idea.tag;
-
   res.json({ success: true, data: idea });
 });
 
-// Delete Idea
+// Delete idea
 router.delete('/:id', (req, res) => {
-  // Find the idea
   const idea = ideas.find(
     (idea) => idea.id === +req.params.id
   );
-  //If idea not found
   if (!idea) {
-    res.status(404).json({
-      success: false,
-      error: 'Resource not found',
-    });
+    return handleResourceNotFound(res);
   }
-  //If found delete the idea
   const index = ideas.indexOf(idea);
   ideas.splice(index, 1);
-
-  // Share success message and return an empty object
   res.json({ success: true, data: {} });
 });
 
-// Find ideas by text
+// Search ideas by string
 router.get('/search/:searchText', (req, res) => {
-  const searchText = req.params.searchText.toLowerCase();
-
-  // Filter ideas based on the searchText
-  const filteredIdeas = ideas.filter(
-    (idea) =>
-      idea.text.toLowerCase().includes(searchText) ||
-      idea.tag.toLowerCase().includes(searchText) ||
-      idea.username.toLowerCase().includes(searchText)
-  );
-
-  // If no ideas match the search criteria, send a 404 error
+  const searchText = toLowerCase(req.params.searchText);
+  const filteredIdeas = filterIdeas(ideas, searchText);
   if (filteredIdeas.length === 0) {
     return res.status(404).json({
       success: false,
       error: 'No ideas found matching the search criteria',
     });
   }
-
-  // If ideas are found, return them
   res.json({ success: true, data: filteredIdeas });
 });
 
-// Find ideas by date or date range
+// Search ideas by date or date range
 router.get(
   '/searchDate/:startDate/:endDate?',
   (req, res) => {
-    const startDate = req.params.startDate;
-    const endDate = req.params.endDate;
-
-    // Convert dates to Date objects
-    const startDateObj = new Date(startDate);
-    const endDateObj = endDate ? new Date(endDate) : null;
-
-    // Filter ideas based on the date(s)
-    const filteredIdeas = ideas.filter((idea) => {
-      const ideaDate = new Date(idea.date);
-      if (endDateObj) {
-        return (
-          ideaDate >= startDateObj && ideaDate <= endDateObj
-        );
-      } else {
-        // If only startDate is provided, search for ideas on that date
-        return (
-          ideaDate.getTime() === startDateObj.getTime()
-        );
-      }
-    });
-
-    // If no ideas match the search criteria, send a 404 error
+    const { startDate, endDate } = req.params;
+    const filteredIdeas = filterIdeasByDate(
+      ideas,
+      startDate,
+      endDate
+    );
     if (filteredIdeas.length === 0) {
       return res.status(404).json({
         success: false,
@@ -167,8 +153,6 @@ router.get(
           'No ideas found matching the search criteria',
       });
     }
-
-    // If ideas are found, return them
     res.json({ success: true, data: filteredIdeas });
   }
 );
