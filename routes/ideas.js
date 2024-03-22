@@ -118,8 +118,7 @@ router.get('/search/:searchText', (req, res) => {
     (idea) =>
       idea.text.toLowerCase().includes(searchText) ||
       idea.tag.toLowerCase().includes(searchText) ||
-      idea.username.toLowerCase().includes(searchText) ||
-      idea.date.toLowerCase().includes(searchText)
+      idea.username.toLowerCase().includes(searchText)
   );
 
   // If no ideas match the search criteria, send a 404 error
@@ -133,5 +132,45 @@ router.get('/search/:searchText', (req, res) => {
   // If ideas are found, return them
   res.json({ success: true, data: filteredIdeas });
 });
+
+// Find ideas by date or date range
+router.get(
+  '/searchDate/:startDate/:endDate?',
+  (req, res) => {
+    const startDate = req.params.startDate;
+    const endDate = req.params.endDate;
+
+    // Convert dates to Date objects
+    const startDateObj = new Date(startDate);
+    const endDateObj = endDate ? new Date(endDate) : null;
+
+    // Filter ideas based on the date(s)
+    const filteredIdeas = ideas.filter((idea) => {
+      const ideaDate = new Date(idea.date);
+      if (endDateObj) {
+        return (
+          ideaDate >= startDateObj && ideaDate <= endDateObj
+        );
+      } else {
+        // If only startDate is provided, search for ideas on that date
+        return (
+          ideaDate.getTime() === startDateObj.getTime()
+        );
+      }
+    });
+
+    // If no ideas match the search criteria, send a 404 error
+    if (filteredIdeas.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error:
+          'No ideas found matching the search criteria',
+      });
+    }
+
+    // If ideas are found, return them
+    res.json({ success: true, data: filteredIdeas });
+  }
+);
 
 module.exports = router;
