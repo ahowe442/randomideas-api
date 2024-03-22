@@ -66,4 +66,22 @@ router.post('/', (req, res) => {
   res.json({ success: true, data: idea });
 });
 
+// Update idea
+router.put('/:id', (req, res) => {
+  const idea = ideas.find(
+    (idea) => idea.id === +req.params.id
+  );
+  if (!idea) {
+    res.status(404).json({
+      success: false,
+      error: 'Resource not found',
+    });
+  }
+  //update or keep the body & tag.
+  idea.text = req.body.text || idea.text;
+  idea.text = req.body.tag || idea.tag;
+
+  res.json({ success: true, data: idea });
+});
+
 module.exports = router;
