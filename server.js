@@ -10,6 +10,9 @@ connectDB();
 
 const app = express();
 
+//Static Folder
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the RandomIdeas API' });
 });

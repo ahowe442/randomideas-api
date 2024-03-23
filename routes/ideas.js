@@ -2,37 +2,6 @@ const express = require('express');
 const router = express.Router();
 const Idea = require('../models/Idea');
 
-// const ideas = [
-//   {
-//     id: 1,
-//     text: 'Positive Newsletter, a newsletter that only shares positive, uplifting news',
-//     tag: 'technology',
-//     username: 'TonyStark',
-//     date: '2022-01-02',
-//   },
-//   {
-//     id: 2,
-//     text: 'Milk cartons that change color the older the milk is.',
-//     tag: 'inventions',
-//     username: 'Genius',
-//     date: '2022-01-02',
-//   },
-//   {
-//     id: 3,
-//     text: 'Basketball Bracket App - Helps you create a NCAA bracket. Oriented for the casual user.',
-//     tag: 'technology',
-//     username: 'TonyStark',
-//     date: '2024-21-03',
-//   },
-//   {
-//     id: 4,
-//     text: 'EduJot - Action oriented notes for building principals',
-//     tag: 'technology',
-//     username: 'TonyStark',
-//     date: '2024-15-02',
-//   },
-// ];
-
 // Middleware to convert text to lowercase
 const toLowerCase = (text) => text.toLowerCase();
 
@@ -127,12 +96,9 @@ router.put('/:id', async (req, res) => {
           tag: req.body.tag,
         },
       },
-      { new: true }
+      { new: true } //If the idea doesn't exist then it will create a new idea.
     );
-    if (!idea) {
-      return handleResourceNotFound(res);
-    }
-    res.json({ success: true, data: idea });
+    res.json({ success: true, data: updatedIdea });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -148,9 +114,6 @@ router.delete('/:id', async (req, res) => {
     const idea = await Idea.findByIdAndDelete(
       req.params.id
     );
-    if (!idea) {
-      return handleResourceNotFound(res);
-    }
     res.json({ success: true, data: {} });
   } catch (error) {
     console.log(error);
