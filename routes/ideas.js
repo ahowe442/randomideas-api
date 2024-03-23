@@ -1,36 +1,37 @@
 const express = require('express');
 const router = express.Router();
+const Idea = require('../models/Idea');
 
-const ideas = [
-  {
-    id: 1,
-    text: 'Positive Newsletter, a newsletter that only shares positive, uplifting news',
-    tag: 'technology',
-    username: 'TonyStark',
-    date: '2022-01-02',
-  },
-  {
-    id: 2,
-    text: 'Milk cartons that change color the older the milk is.',
-    tag: 'inventions',
-    username: 'Genius',
-    date: '2022-01-02',
-  },
-  {
-    id: 3,
-    text: 'Basketball Bracket App - Helps you create a NCAA bracket. Oriented for the casual user.',
-    tag: 'technology',
-    username: 'TonyStark',
-    date: '2024-21-03',
-  },
-  {
-    id: 4,
-    text: 'EduJot - Action oriented notes for building principals',
-    tag: 'technology',
-    username: 'TonyStark',
-    date: '2024-15-02',
-  },
-];
+// const ideas = [
+//   {
+//     id: 1,
+//     text: 'Positive Newsletter, a newsletter that only shares positive, uplifting news',
+//     tag: 'technology',
+//     username: 'TonyStark',
+//     date: '2022-01-02',
+//   },
+//   {
+//     id: 2,
+//     text: 'Milk cartons that change color the older the milk is.',
+//     tag: 'inventions',
+//     username: 'Genius',
+//     date: '2022-01-02',
+//   },
+//   {
+//     id: 3,
+//     text: 'Basketball Bracket App - Helps you create a NCAA bracket. Oriented for the casual user.',
+//     tag: 'technology',
+//     username: 'TonyStark',
+//     date: '2024-21-03',
+//   },
+//   {
+//     id: 4,
+//     text: 'EduJot - Action oriented notes for building principals',
+//     tag: 'technology',
+//     username: 'TonyStark',
+//     date: '2024-15-02',
+//   },
+// ];
 
 // Middleware to convert text to lowercase
 const toLowerCase = (text) => text.toLowerCase();
@@ -69,83 +70,108 @@ const filterIdeasByDate = (ideas, startDate, endDate) => {
 };
 
 // Get all ideas
-router.get('/', (req, res) => {
-  res.json({ success: true, data: ideas });
+router.get('/', async (req, res) => {
+  try {
+    const ideas = await Idea.find();
+    res.json({ success: true, data: ideas });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      error: 'Something went wrong.',
+    });
+  }
 });
 
 // Get single idea
-router.get('/:id', (req, res) => {
-  const idea = ideas.find(
-    (idea) => idea.id === +req.params.id
-  );
-  if (!idea) {
-    return handleResourceNotFound(res);
+router.get('/:id', async (req, res) => {
+  try {
+    const idea = await Idea.findById(req.params.id);
+    if (!idea) {
+      return handleResourceNotFound(res);
+    }
+    res.json({ success: true, data: idea });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      error: 'Something went wrong',
+    });
   }
-  res.json({ success: true, data: idea });
 });
 
 // Add an idea
-router.post('/', (req, res) => {
-  const idea = {
-    id: ideas.length + 1,
-    text: req.body.text,
-    tag: req.body.tag,
-    username: req.body.username,
-    date: new Date().toISOString().slice(0, 10),
-  };
-  ideas.push(idea);
-  res.json({ success: true, data: idea });
+router.post('/', async (req, res) => {
+  const { text, tag, username } = req.body;
+  try {
+    const idea = new Idea({ text, tag, username });
+    const savedIdea = await idea.save();
+    res.json({ success: true, data: savedIdea });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      error: 'Something went wrong',
+    });
+  }
 });
 
 // Update idea
-router.put('/:id', (req, res) => {
-  const idea = ideas.find(
-    (idea) => idea.id === +req.params.id
-  );
-  if (!idea) {
-    return handleResourceNotFound(res);
+router.put('/:id', async (req, res) => {
+  try {
+    const updatedIdea = await Idea.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          text: req.body.text,
+          tag: req.body.tag,
+        },
+      },
+      { new: true }
+    );
+    if (!idea) {
+      return handleResourceNotFound(res);
+    }
+    res.json({ success: true, data: idea });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      error: 'Something went wrong',
+    });
   }
-  idea.text = req.body.text || idea.text;
-  idea.tag = req.body.tag || idea.tag;
-  res.json({ success: true, data: idea });
 });
 
 // Delete idea
-router.delete('/:id', (req, res) => {
-  const idea = ideas.find(
-    (idea) => idea.id === +req.params.id
-  );
-  if (!idea) {
-    return handleResourceNotFound(res);
+router.delete('/:id', async (req, res) => {
+  try {
+    const idea = await Idea.findByIdAndDelete(
+      req.params.id
+    );
+    if (!idea) {
+      return handleResourceNotFound(res);
+    }
+    res.json({ success: true, data: {} });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      error: 'Something went wrong',
+    });
   }
-  const index = ideas.indexOf(idea);
-  ideas.splice(index, 1);
-  res.json({ success: true, data: {} });
 });
 
 // Search ideas by string
-router.get('/search/:searchText', (req, res) => {
-  const searchText = toLowerCase(req.params.searchText);
-  const filteredIdeas = filterIdeas(ideas, searchText);
-  if (filteredIdeas.length === 0) {
-    return res.status(404).json({
-      success: false,
-      error: 'No ideas found matching the search criteria',
+router.get('/search/:searchText', async (req, res) => {
+  try {
+    const searchText = toLowerCase(req.params.searchText);
+    const filteredIdeas = await Idea.find({
+      $or: [
+        { text: { $regex: searchText, $options: 'i' } },
+        { tag: { $regex: searchText, $options: 'i' } },
+        { username: { $regex: searchText, $options: 'i' } },
+      ],
     });
-  }
-  res.json({ success: true, data: filteredIdeas });
-});
-
-// Search ideas by date or date range
-router.get(
-  '/searchDate/:startDate/:endDate?',
-  (req, res) => {
-    const { startDate, endDate } = req.params;
-    const filteredIdeas = filterIdeasByDate(
-      ideas,
-      startDate,
-      endDate
-    );
     if (filteredIdeas.length === 0) {
       return res.status(404).json({
         success: false,
@@ -154,6 +180,42 @@ router.get(
       });
     }
     res.json({ success: true, data: filteredIdeas });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      error: 'Something went wrong',
+    });
+  }
+});
+
+// Search ideas by date or date range
+router.get(
+  '/searchDate/:startDate/:endDate?',
+  async (req, res) => {
+    try {
+      const { startDate, endDate } = req.params;
+      const filteredIdeas = await Idea.find({
+        date: {
+          $gte: new Date(startDate),
+          ...(endDate && { $lte: new Date(endDate) }),
+        },
+      });
+      if (filteredIdeas.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error:
+            'No ideas found matching the search criteria',
+        });
+      }
+      res.json({ success: true, data: filteredIdeas });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        success: false,
+        error: 'Something went wrong',
+      });
+    }
   }
 );
 

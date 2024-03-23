@@ -21,7 +21,9 @@
   },
   "homepage": "https://github.com/ahowe442/randomideas-api#readme",
   "dependencies": {
-    "express": "^4.19.1"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.1",
+    "mongoose": "^8.2.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

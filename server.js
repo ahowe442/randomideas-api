@@ -1,6 +1,11 @@
 const express = require('express');
-const port = 5001;
+const dotenv = require('dotenv');
+//require('dotenv').config();
+dotenv.config();
+const port = process.env.PORT || 5001;
+const connectDB = require('./config/db');
 
+connectDB();
 const app = express();
 
 app.get('/', (req, res) => {
@@ -10,6 +15,7 @@ app.get('/', (req, res) => {
 //Body Parser middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
 //This is where it will get the ideas data.
 const ideasRouter = require('./routes/ideas');
 
