@@ -2,7 +2,7 @@ class Modal {
   constructor() {
     this._modal = document.querySelector('#modal');
     this._modalBtn = document.querySelector('#modal-btn');
-    this.addEventListener();
+    this.addEventListeners();
   }
   addEventListeners() {
     this._modalBtn.addEventListener(
@@ -12,6 +12,9 @@ class Modal {
     window.addEventListener(
       'click',
       this.outsideClick.bind(this)
+    );
+    document.addEventListener('closemodal', () =>
+      this.close()
     );
   }
 
@@ -25,7 +28,7 @@ class Modal {
 
   outsideClick(e) {
     if (e.target === this._modal) {
-      close();
+      this.close();
     }
   }
 }

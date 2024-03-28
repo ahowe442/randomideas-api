@@ -5,7 +5,7 @@ const connectDB = async () => {
     process.env.MONGO_URI
   );
   console.log(
-    `MOngoDB Connected:  ${conn.connection.host}`
+    `MongoDB Connected:  ${conn.connection.host}`
   );
 };
 
